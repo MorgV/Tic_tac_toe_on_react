@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { GAME_SYMBOLS, MOVE_ORDER } from "./constans";
-
-const getNextMove = (currentMove, playersCount) => {
-  const slicedMoveOrder = MOVE_ORDER.slice(0, playersCount);
-  const nextCurrentMove = slicedMoveOrder.indexOf(currentMove) + 1;
-  return slicedMoveOrder[nextCurrentMove] ?? slicedMoveOrder[0];
-};
+import { GAME_SYMBOLS } from "./constans";
+import { computerWinner, getNextMove } from "./model";
 
 export function useGameState(playersCount) {
-  const [{ currentMove, cells }, setGameState] = useState(() => ({
-    cells: new Array(19 * 19).fill(null),
-    currentMove: GAME_SYMBOLS.CROSS,
-  }));
-  const nextMove = getNextMove(currentMove, playersCount);
+  const [{ currentMove, cells, playersTimeOver }, setGameState] = useState(
+    () => ({
+      cells: new Array(19 * 19).fill(null),
+      currentMove: GAME_SYMBOLS.CROSS,
+      playersTimeOver: [],
+    }),
+  );
+  const winnerSequence = computerWinner(cells);
+  const nextMove = getNextMove(currentMove, playersCount, playersTimeOver);
+
+  const winnerSymbol =
+    nextMove === currentMove ? currentMove : winnerSequence?.[0];
 
   const handleGameCellClick = (index) => {
     setGameState((lastGameState) => {
@@ -21,17 +23,39 @@ export function useGameState(playersCount) {
       }
       return {
         ...lastGameState,
-        currentMove: getNextMove(lastGameState.currentMove, playersCount),
+        currentMove: getNextMove(
+          lastGameState.currentMove,
+          playersCount,
+          lastGameState.playersTimeOver,
+        ),
         cells: lastGameState.cells.map((cell, i) =>
           i === index ? lastGameState.currentMove : cell,
         ),
       };
     });
   };
+
+  const handlePlayerTimeOver = (symbol) => {
+    setGameState((lastGameState) => {
+      return {
+        ...lastGameState,
+        playersTimeOver: [...lastGameState.playersTimeOver, symbol],
+        currentMove: getNextMove(
+          lastGameState.currentMove,
+          playersCount,
+          lastGameState.playersTimeOver,
+        ),
+      };
+    });
+  };
+
   return {
     cells,
     currentMove,
     nextMove,
     handleGameCellClick,
+    winnerSequence,
+    winnerSymbol,
+    handlePlayerTimeOver,
   };
 }

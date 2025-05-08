@@ -41,12 +41,18 @@ const players = [
   },
 ];
 
-export function GameInfo({ className, playersCount, currentMove }) {
+export function GameInfo({
+  className,
+  playersCount,
+  currentMove,
+  isWinner,
+  onPlayerTimerOver,
+}) {
   return (
     <div
       className={clsx(
-        className,
         "bg-white rounded-2xl shadow-md px-8 py-4  justify-between grid grid-cols-2 gap-3",
+        className,
       )}
     >
       {players.slice(0, playersCount).map((player, index) => {
@@ -55,7 +61,8 @@ export function GameInfo({ className, playersCount, currentMove }) {
             key={player.id}
             playerInfo={player}
             isRight={index % 2 === 1}
-            isMove={currentMove === player.symbol}
+            isMove={currentMove === player.symbol && !isWinner}
+            onTimeOver={() => onPlayerTimerOver(player.symbol)}
           />
         );
       })}
@@ -63,8 +70,8 @@ export function GameInfo({ className, playersCount, currentMove }) {
   );
 }
 
-function PlayerInfo({ playerInfo, isRight, isMove }) {
-  const [seconds, setSeconds] = useState(60);
+function PlayerInfo({ playerInfo, isRight, isMove, onTimeOver }) {
+  const [seconds, setSeconds] = useState(1);
 
   const minutesStroke = String(Math.floor(seconds / 60)).padStart(2, "0");
   const secondsStroke = String(Math.floor(seconds % 60)).padStart(2, "0");
@@ -73,6 +80,7 @@ function PlayerInfo({ playerInfo, isRight, isMove }) {
 
   const getColor = () => {
     if (isMove) {
+      console.log(seconds, isDanger);
       return isDanger ? "text-orange-500" : "text-slate-900";
     }
     return "text-slate-200";
@@ -86,9 +94,15 @@ function PlayerInfo({ playerInfo, isRight, isMove }) {
 
     return () => {
       clearInterval(interval);
-      setSeconds(60);
+      setSeconds(1);
     };
   }, [isMove]);
+
+  useEffect(() => {
+    if (seconds === 0) {
+      onTimeOver();
+    }
+  }, [seconds]);
 
   return (
     <div className="flex gap-3 items-center">
@@ -106,9 +120,9 @@ function PlayerInfo({ playerInfo, isRight, isMove }) {
       <div className={clsx("h-6 w-px bg-slate-200", isRight && "order-2")} />
       <div
         className={clsx(
-          "text-slate-900 text-lg font-semibold w-[60px]",
-          isRight && "order-1",
+          "text-lg font-semibold w-[60px]",
           getColor(),
+          isRight && "order-1",
         )}
       >
         {minutesStroke}:{secondsStroke}
