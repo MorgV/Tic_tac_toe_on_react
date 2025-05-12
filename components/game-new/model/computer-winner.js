@@ -1,13 +1,3 @@
-import { MOVE_ORDER } from "./constans";
-
-export const getNextMove = (currentMove, playersCount, playersTimeOver) => {
-  const slicedMoveOrder = MOVE_ORDER.slice(0, playersCount).filter(
-    (symbol) => !playersTimeOver.includes(symbol),
-  );
-
-  const nextCurrentMove = slicedMoveOrder.indexOf(currentMove) + 1;
-  return slicedMoveOrder[nextCurrentMove] ?? slicedMoveOrder[0];
-};
 export const computerWinner = (cells, sequenceSize = 5, fieldSize = 19) => {
   const compareElement = (indexes) => {
     let result = true;
